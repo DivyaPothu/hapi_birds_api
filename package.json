@@ -1,0 +1,25 @@
+{
+  "name": "hapi_birdsapi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel-core": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "body-parser": "^1.18.2",
+    "hapi": "^16.6.2",
+    "hapi-auth-jwt": "^4.0.0",
+    "hapi-bodyparser": "^1.0.2",
+    "jsonwebtoken": "^8.1.0",
+    "knex": "^0.13.0",
+    "pg": "^7.4.0",
+    "postgresql": "0.0.1",
+    "sequelize": "^4.22.5"
+  }
+}
