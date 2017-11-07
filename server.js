@@ -1,5 +1,7 @@
 var Hapi = require('hapi');
-const server = new Hapi.Server();
+const server = new Hapi.Server({
+    connections:{routes:{cors:true}}
+  });
 var pg = require('pg');
 var Sequelize=require ('sequelize');
 var hapiparser = require("hapi-bodyparser"); // Body parser for fetch posted data
@@ -12,7 +14,7 @@ var bodyParser = require("body-parser"); // Body parser for fetch posted data
 //server.use(bodyParser.urlencoded({ extended: false })); 
 //server.use(bodyParser.json()); // Body parser use JSON data
 server.connection( {
-    port: 8080
+    port: 8086
 });
 
 var sequelize = new Sequelize('d89hhdn2b982d3', 'xruwueimrdtokm', '993922da5900d246fc6d1b7c81e443b58ff54c5694b35e086455da777bdc70b6', {
@@ -124,49 +126,67 @@ server.route({
     plugins: {
       body: { merge: false, sanitizer: { stripNullorEmpty: false } }
     },
+    cors: {
+        origin: ['*'],
+        additionalHeaders: ['cache-control', 'x-requested-with'],
+        credentials: true
+    },
     handler: ( request, reply) => {
          var data = {
-        "Data":""
+        
     };
      sequelize.query("SELECT * FROM birds where visible=:visible", { replacements: { visible: 'true' },type: sequelize.QueryTypes.SELECT})
   .then(function(Birds,err,rows,fields) {
     // We don't need spread here, since only the results will be returned for select queries
     //if(rows.length!=0){
     if(Birds){
-    
-            data["Data"] = Birds;
-            // data["Data"] = rows;
-            //reply(reply.json(data));
-           reply(data);
+    console.log("Called Birds GET Method !!");
+    data["Data"] = Birds;
+    reply(data);
      
-        }
+    }   
   });
-    }
+}
 }
 });
+
 server.route({
+   
     method:'POST',
     path:'/Postbird',
     config: {
     plugins: {
       body: { merge: false, sanitizer: { stripNullorEmpty: false } }
     },
+    cors: {
+        origin: ['*'],
+        headers:['Accept', 'Authorization', 'Content-Type', 'If-None-Match'],
+        additionalHeaders: ['cache-control', 'x-requested-with'],
+        credentials: true
+
+    },
      handler: ( request, reply ) => {
+
+    console.log(request.payload);
+
+    console.log("Called Birds POST Method !!");
     var idd = request.payload.idd;
     var name = request.payload.name;
     var family= request.payload.family;
     var continents = request.payload.continents;
-     var added= request.payload.added;
-      var visible= request.payload.visible;
+    var added= request.payload.added;
+    var visible= request.payload.visible;
      
-      console.log(idd);
-    
-    console.log(idd);
+
+
     var data = {
         "Data":""
     };
+  //  if( !!name && !!family && !!continents ) {
    if(!!idd&& !!name && !!family && !!continents && !!added && !!visible) {
 sequelize.query("INSERT INTO birds (idd,name,family,continents,added,visible) VALUES('" + idd+ "','" + name+ "','" + family + "','" + continents+ "','" + added+ "','" + visible+ "')",[idd,name,family,continents,added,visible],{type: sequelize.QueryTypes.INSERT}).then(function(Birds,err) {
+    //sequelize.query("INSERT INTO birds (name,family,continents) VALUES('" + name+ "','" + family + "','" + continents+ "')",[name,family,continents],{type: sequelize.QueryTypes.INSERT}).then(function(Birds,err) {
+
     
  if(!!err){
                 data.Data = "Error Adding data";
@@ -179,7 +199,7 @@ sequelize.query("INSERT INTO birds (idd,name,family,continents,added,visible) VA
     }else{
         data["Data"] = "Please provide all required data of bird";
         //res.json(404).data);
-res.status(400).json(data);
+ reply(data);
     }
     }
 }
@@ -192,14 +212,19 @@ server.route({
     plugins: {
       body: { merge: false, sanitizer: { stripNullorEmpty: false } }
     },
+    cors: {
+        origin: ['*'],
+        additionalHeaders: ['cache-control', 'x-requested-with'],
+        credentials: true
+
+    },
      handler: ( request, reply ) => {
-  
-     var idd = request.payload.idd;
-     var name= request.payload.name;
-      var data = {
-  
-        "Data":""
-      };
+        console.log("Called Birds PUT Method !!");
+        var idd = request.payload.idd;
+        var name= request.payload.name;
+        var data = {
+            "Data":""
+    };
   
       if(!!idd&& !!name ) {
   sequelize.query("UPDATE birds set name= '"+name+"' where idd= '"+idd+"' ",[idd,name],{type: sequelize.QueryTypes.UPDATE}).then(function(Birds,err) {
@@ -228,37 +253,35 @@ server.route({
     plugins: {
       body: { merge: false, sanitizer: { stripNullorEmpty: false } }
     },
-     handler: ( request, reply ) => {  
-     var idd = request.payload.idd;
-     
-      var data = {
-  
+    cors: {
+        origin: ['*'],
+        additionalHeaders: ['cache-control', 'x-requested-with'],
+        credentials: true
+    },
+    handler: ( request, reply ) => {  
+    console.log("Called Birds DELETE Method !!");
+    var idd = request.payload.idd;
+    var data = {
         "Data":""
-      };
+    };
   
-      if(!!idd) {
-  sequelize.query("DELETE from  birds where idd= '"+idd+"' ",[idd],{type: sequelize.QueryTypes.DELETE}).then(function(Birds,err) {
+    if(!!idd) {
+        sequelize.query("DELETE from  birds where idd= '"+idd+"' ",[idd],{type: sequelize.QueryTypes.DELETE}).then(function(Birds,err) {
       
-   if(!!err){
+            if(!!err){
                   data["Data"] = "Error Adding data";
-              }else{
+            }else{
                   data["Data"] = "Bird Deleted Successfully";
-              }
+            }
               reply(data);
           });
-      }else{
+    }else{
           data["Data"] = "Please provide all required data of bird";
           reply.status(404).json(data);
-    
-      
-  }
+    }
+    }
 }
-}
-  });
-
-
-
-
+});
 
 
 
